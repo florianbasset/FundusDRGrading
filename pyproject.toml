@@ -11,10 +11,13 @@ dependencies = [
     "scikit-learn",
     "pytorch-lightning",
     "nntools @ git+https://github.com/ClementPla/NNTools@attrs_dataset",
+    "fundus-data-toolkit @ git+https://github.com/ClementPla/fundus-data-toolkit",
+    "fundus-preprocessor-toolkit @ git+https://github.com/florianbasset/fundus-preprocessor-toolkit"
     "timm",
     "wandb",
     "torchmetrics",
     "thop",
+    "rich"
 ]
 readme = "README.md"
 

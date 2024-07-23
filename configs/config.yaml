@@ -2,46 +2,54 @@
 define: &img_shape [512, 512]
 
 logger:
-  project: Grading-DiabeticRetinopathy-Comparisons-V2
+  project: Grading-DiabeticRetinopathy-Comparisons-V3
+
+datasets:
+  eyepacs: /home/florian/Documents/donnees_medicales/eyepacs/
+  aptos: /home/florian/Documents/donnees_medicales/aptos/
+  idrid: /home/florian/Documents/donnees_medicales/IDRID/B. Disease Grading/ 
+  ddr: /home/florian/Documents/donnees_medicales/DDR-dataset/DR_grading/
 
 data:
-  data_dir: /home/tmp/clpla/data/eyepacs/
   img_size: *img_shape
-  batch_size: 14
-  valid_size: 4000
-  num_workers: auto
+  batch_size: 128 #64
+  valid_size: 0.2 
+  num_workers: 8 
   use_cache: True
-  cache_option: disk  # or memory
+  cache_option: disk  #disk or memory
 
 model:
   architecture: mobilenet_v3large
-  num_classes: 5
-  pretrained: True
-  img_size: *img_shape
+  num_classes: 5 
+  pretrained: True #True
+  img_size: *img_shape 
 
 training:
-  lr: 0.00003
-  as_regression: True
+  lr: 0.0001 #0.00003
+  as_regression: True #true
   optimizer:
-    betas: [.9, .999]
-    weight_decay: 0.0005
-  mixup:
-    mixup_alpha: 0
-    cutmix_alpha: 0
-    cutmix_minmax:
-    prob: 1.0
-    switch_prob: 0.5
-    mode: batch
-    label_smoothing: 0.1
-    num_classes: 5
+    betas: [.9, .999] # [.9, .999]
+    weight_decay: 0.0005 #0.0005
+  # mixup:
+  #   mixup_alpha: 0.5
+  #   cutmix_alpha: 0.5
+  #   prob: 1.0
+  #   switch_prob: 0.5
+  #   mode: batch
+  #   label_smoothing: 0.1
+  #   num_classes: 5
+  swa:
+    swa_lrs: 0.00003  #0.00003
+  ema:
+    decay: 0.999 #0.999
 
 trainer:
-  accumulate_grad_batches: 4
-  accelerator: gpu
-  deterministic: False
-  devices: auto
-  max_epochs: 100
-  precision: 16-mixed
-  check_val_every_n_epoch: 1
-  num_sanity_val_steps: 2
-  fast_dev_run: False
+  accumulate_grad_batches: 4 #4
+  accelerator: gpu #gpu
+  deterministic: False #false
+  devices: [0] # 
+  max_epochs: 250 #200
+  precision: 16-mixed #16-mixed
+  check_val_every_n_epoch: 1 #1
+  num_sanity_val_steps: 2 #2
+  fast_dev_run: False #false

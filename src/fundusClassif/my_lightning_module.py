@@ -4,14 +4,15 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchmetrics
+from huggingface_hub import PyTorchModelHubMixin
 from pytorch_lightning.utilities.types import STEP_OUTPUT
-from timm.data.mixup import Mixup
 
+from fundusClassif.metrics.metrics_factory import get_metric
 from fundusClassif.models.model_factory import create_model
 
 
-class TrainerModule(pl.LightningModule):
-    def __init__(self, network_config: dict, training_config: dict) -> None:
+class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
+    def __init__(self, network_config: dict, training_config: dict, test_datasets_ids: list) -> None:
         super().__init__()
 
         self.as_regression = training_config.get("as_regression", False)
@@ -32,47 +33,21 @@ class TrainerModule(pl.LightningModule):
             self.loss = nn.CrossEntropyLoss()
 
         self.metrics = torchmetrics.MetricCollection(
-            {
-                "Accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=self.n_classes),
-                "Quadratic Kappa": torchmetrics.CohenKappa(
-                    num_classes=self.n_classes,
-                    task="multiclass",
-                    weights="quadratic",
-                ),
-            }
+            metrics=get_metric(num_classes=self.n_classes), prefix="Validation "
         )
-
-        self.test_metrics = torchmetrics.MetricCollection(
-            {
-                "Test accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=self.n_classes),
-                "Test recall": torchmetrics.Recall(task="multiclass", num_classes=self.n_classes),
-                "Test specificity": torchmetrics.Specificity(task="multiclass", num_classes=self.n_classes),
-                "Test precision": torchmetrics.Precision(task="multiclass", num_classes=self.n_classes),
-                "Test Quadratic Kappa": torchmetrics.CohenKappa(
-                    num_classes=self.n_classes,
-                    task="multiclass",
-                    weights="quadratic",
-                ),
-            }
-        )
-        mixup_config = training_config.get("mixup", None)
-        if mixup_config is not None and any(
-            [
-                mixup_config["mixup_alpha"] > 0,
-                mixup_config["cutmix_alpha"] > 0,
-                mixup_config["cutmix_minmax"] is not None,
-            ]
-        ):
-            self.mixup = Mixup(**mixup_config)
-        else:
-            self.mixup = None
+        test_metrics = []
+        for d_id in test_datasets_ids:
+            test_metrics.append(
+                torchmetrics.MetricCollection(
+                    metrics=get_metric(num_classes=self.n_classes),
+                    postfix=f"_{d_id}",
+                )
+            )
+        self.test_metrics = nn.ModuleList(test_metrics)
 
     def training_step(self, data, batch_index) -> STEP_OUTPUT:
         image = data["image"]
         gt = data["label"]
-        if self.mixup is not None:
-            image, gt = self.mixup(image, gt)
-
         logits = self.model(image)
         loss = self.get_loss(logits, gt)
         self.log("train_loss", loss, on_epoch=True, on_step=True, sync_dist=True, prog_bar=True)
@@ -106,13 +81,15 @@ class TrainerModule(pl.LightningModule):
         self.log("val_loss", loss, on_epoch=True, on_step=False, sync_dist=True)
         return {"pred": pred, "gt": gt}
 
-    def test_step(self, data, batch_index) -> STEP_OUTPUT:
+    def test_step(self, data, batch_index, dataloader_idx=0) -> STEP_OUTPUT:
         image = data["image"]
         gt = data["label"]
         logits = self.model(image)
         pred = self.get_pred(logits)
-        self.test_metrics.update(pred, gt)
-        self.log_dict(self.test_metrics, on_epoch=True, on_step=False, sync_dist=True)
+        test_metrics = self.test_metrics[dataloader_idx]
+        test_metrics.update(pred, gt)
+        self.log_dict(test_metrics, on_epoch=True, on_step=False, sync_dist=True, add_dataloader_idx=False)
+        return {"pred": logits, "gt": gt}
 
     def configure_optimizers(self) -> Any:
         optimizer = torch.optim.AdamW(
@@ -120,7 +97,7 @@ class TrainerModule(pl.LightningModule):
         )
         return [optimizer], [
             {
-                "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, factor=0.1, mode="min"),
+                "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, factor=0.5, mode="min"),
                 "monitor": "val_loss",
                 "interval": "epoch",
                 "frequency": 1,

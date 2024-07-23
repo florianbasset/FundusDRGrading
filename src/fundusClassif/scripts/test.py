@@ -22,7 +22,7 @@ def train(arch: str):
     config["model"]["architecture"] = arch
     project_name = config["logger"]["project"]
 
-    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch))
+    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch,),id = "d7l3wk7v")
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
     
     test_dataloader = datamodule.test_dataloader()
@@ -31,14 +31,6 @@ def train(arch: str):
 
     training_callbacks = get_callbacks(config['training'])
     
-    checkpoint_callback = ModelCheckpoint(
-        monitor="Validation Quadratic Kappa",
-        mode="max",
-        save_last=True,
-        auto_insert_metric_name=True,
-        save_top_k=1,
-        dirpath=os.path.join("checkpoints", project_name, os.environ["WANDB_RUN_NAME"]),
-    )
 
     trainer = Trainer(
         **config["trainer"],
@@ -46,14 +38,16 @@ def train(arch: str):
         callbacks=[
             *training_callbacks,
             ResultSaver(os.path.join("results", project_name)),
-            # RichProgressBar(),
-            checkpoint_callback,
             EarlyStopping(monitor="Validation Quadratic Kappa", patience=25, mode="max"),
             LearningRateMonitor(),
         ],
     )
-    trainer.fit(model, datamodule=datamodule)
-    trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
+    
+    trainer.test(model, 
+                 dataloaders=test_dataloader, 
+                 ckpt_path="checkpoints/Grading-DiabeticRetinopathy-Comparisons-V3/breezy-tree-43/epoch=199-step=27600.ckpt", 
+                 verbose=True,
+                 )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
