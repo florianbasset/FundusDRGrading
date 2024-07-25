@@ -2,6 +2,7 @@ import os
 import argparse
 
 import torch
+from fundus_prepro.algo import seoud
 from nntools.utils import Config
 from nntools.dataset import nntools_wrapper
 from pytorch_lightning import Trainer, seed_everything
@@ -18,15 +19,13 @@ def train(arch: str):
     config = Config("configs/config.yaml")
     config["model"]["architecture"] = arch
     config['data']['cache_dir'] = os.path.join(config['data']['cache_dir'], '_seoud')
-
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
 
-    seoud_preprocess = nntools_wrapper(seoud_preprocess)
+    seoud_preprocess = nntools_wrapper(seoud(config['data']))
 
     datamodule.post_resize_pre_cache.append(seoud_preprocess)
     
     datamodule.setup_all()
-
 
 
 

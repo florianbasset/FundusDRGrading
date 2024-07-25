@@ -6,6 +6,8 @@ import torch.nn as nn
 import torchmetrics
 from huggingface_hub import PyTorchModelHubMixin
 from pytorch_lightning.utilities.types import STEP_OUTPUT
+from adamp import AdamP
+
 
 from fundusClassif.metrics.metrics_factory import get_metric
 from fundusClassif.models.model_factory import create_model
@@ -24,8 +26,15 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
         self.network_config = network_config
         self.training_config = training_config
         print(network_config)
+        print(training_config)
 
         self.model = create_model(**network_config)
+
+        if isinstance(self.model, torch.nn.Module):
+            for module in self.model.modules():
+                if isinstance(module, (nn.Dropout, nn.Dropout2d, nn.Dropout3d)):
+                    module.p = 0.8 
+        
 
         if self.as_regression:
             self.loss = nn.MSELoss()
@@ -91,10 +100,19 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
         self.log_dict(test_metrics, on_epoch=True, on_step=False, sync_dist=True, add_dataloader_idx=False)
         return {"pred": logits, "gt": gt}
 
-    def configure_optimizers(self) -> Any:
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
-        )
+    def configure_optimizers(self) -> Any:       
+        #match self.training_config["optimizer"]['name']:
+        #    case "AdamP":
+        #        optimizer = AdamP(
+        #            self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
+        #        )
+        #    case "AdamW":
+        #        optimizer = torch.optim.AdamW(
+        #            self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
+        #        )
+        optimizer = AdamP(
+                    self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
+                )
         return [optimizer], [
             {
                 "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, factor=0.5, mode="min"),
@@ -103,3 +121,7 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
                 "frequency": 1,
             }
         ]
+
+
+
+
