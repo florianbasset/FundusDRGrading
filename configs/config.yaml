@@ -13,7 +13,7 @@ datasets:
 data:
   img_size: *img_shape
   batch_size: 32 #64
-  valid_size: 0.1 
+  valid_size: 0.2 
   num_workers: 8
   use_cache: True
   cache_option: disk  #disk or memory
@@ -28,7 +28,7 @@ training:
   lr: 0.0001 #0.00003
   as_regression: False #true
   optimizer:
-    #name: AdamP #or AdamW
+    name: AdamP #or AdamW
     betas: [.9, .999] # [.9, .999]
     weight_decay: 0.05 #0.0005
   # mixup:
@@ -50,7 +50,7 @@ trainer:
   deterministic: False #false
   devices: [0] # 
   max_epochs: 1000 #200
-  precision: 32-mixed #16-mixed
+  precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2
   fast_dev_run: False #false

@@ -46,7 +46,7 @@ def train(arch: str):
         callbacks=[
             *training_callbacks,
             ResultSaver(os.path.join("results", project_name)),
-            # RichProgressBar(),
+            #RichProgressBar(),
             checkpoint_callback,
             EarlyStopping(monitor="Validation Quadratic Kappa", patience=25, mode="max"),
             LearningRateMonitor(),
