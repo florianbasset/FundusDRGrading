@@ -22,7 +22,7 @@ def train(arch: str):
     config["model"]["architecture"] = arch
     project_name = config["logger"]["project"]
 
-    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch,),id = "nbm5j9u1")
+    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch,),id = "e6egufhk")
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
     
     test_dataloader = datamodule.test_dataloader()
@@ -30,7 +30,6 @@ def train(arch: str):
     model = TrainerModule(config["model"], config["training"], test_datasets_ids)
 
     training_callbacks = get_callbacks(config['training'])
-    
 
     trainer = Trainer(
         **config["trainer"],
@@ -45,7 +44,7 @@ def train(arch: str):
     
     trainer.test(model, 
                  dataloaders=test_dataloader, 
-                 ckpt_path="checkpoints/Grading-DiabeticRetinopathy-Comparisons-V3/rich-jazz-84/epoch=53-step=237114.ckpt", 
+                 ckpt_path="checkpoints/Grading-DiabeticRetinopathy-Comparisons-V3/valiant-cosmos-86/epoch=44-step=49410.ckpt", 
                  verbose=True,
                  )
 

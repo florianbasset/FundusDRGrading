@@ -7,6 +7,7 @@ import torchmetrics
 from huggingface_hub import PyTorchModelHubMixin
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from timm.optim import AdamP
+import timm.data.mixup as timm_mixup
 
 
 from fundusClassif.metrics.metrics_factory import get_metric
@@ -19,6 +20,7 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
 
         self.as_regression = training_config.get("as_regression", False)
         self.n_classes = network_config["num_classes"]
+        
 
         if self.as_regression:
             network_config["num_classes"] = 1
@@ -26,18 +28,19 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
         self.network_config = network_config
         self.training_config = training_config
         print(network_config)
-        #print(training_config)
+        print(training_config)
+        
 
         self.model = create_model(**network_config)
 
         #DROPOUT
-        
         #if isinstance(self.model, torch.nn.Module):
         #    for module in self.model.modules():
         #        if isinstance(module, (nn.Dropout, nn.Dropout2d, nn.Dropout3d)):
         #            module.p = 0.5 
         
         #print(self.model)
+
 
         if self.as_regression:
             self.loss = nn.MSELoss()
@@ -55,7 +58,6 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
                     postfix=f"_{d_id}",
                 )
             )
-        
         self.test_metrics = nn.ModuleList(test_metrics)
 
     def training_step(self, data, batch_index) -> STEP_OUTPUT:
@@ -81,7 +83,7 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
         if self.as_regression:
             return self.loss(logits.flatten(), gt.float())
         else:
-            return self.loss(logits, gt.long())
+            return self.loss(logits, gt)
 
     def validation_step(self, data, batch_index) -> STEP_OUTPUT:
         image = data["image"]
@@ -112,10 +114,6 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
                 )
             case "AdamW":
                 optimizer = torch.optim.AdamW(
-                    self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
-                )
-            case "Adam":
-                optimizer = torch.optim.Adam(
                     self.model.parameters(), lr=self.training_config["lr"], **self.training_config["optimizer"]
                 )
         return [optimizer], [

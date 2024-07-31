@@ -17,28 +17,29 @@ data:
   num_workers: 8
   use_cache: True
   cache_option: disk  #disk or memory
+  data_augmentation_type: heavy #heavy  or heavyarticle
 
 model:
-  architecture: mobilenet_v3large
+  architecture: mobilenetv2_120d.ra_in1k
   num_classes: 5 
   pretrained: True #True
   img_size: *img_shape 
 
 training:
-  lr: 0.0001 #0.00003
+  lr: 0.00003
   as_regression: False #true
   optimizer:
     name: AdamP #or AdamW
     betas: [.9, .999] # [.9, .999]
-    weight_decay: 0.05 #0.0005
-  # mixup:
-  #   mixup_alpha: 0.5
-  #   cutmix_alpha: 0.5
-  #   prob: 1.0
-  #   switch_prob: 0.5
-  #   mode: batch
-  #   label_smoothing: 0.1
-  #   num_classes: 5
+    weight_decay: 0.0005
+  mixup: 
+    mixup_alpha: 0.5
+    cutmix_alpha: 0.5
+    prob: 1.0
+    switch_prob: 0.5
+    mode: batch
+    label_smoothing: 0.1
+    num_classes: 5
   swa:
     swa_lrs: 0.00003  #0.00003
   ema:
@@ -48,7 +49,7 @@ trainer:
   accumulate_grad_batches: 1 #4
   accelerator: gpu #gpu
   deterministic: False #false
-  devices: [0] # 
+  devices: [0] 
   max_epochs: 1000 #200
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1

@@ -14,15 +14,12 @@ from fundusClassif.utils.logger import get_wandb_logger
 
 torch.set_float32_matmul_precision("medium")
 
-
-def train(arch: str):
+def train(config: Config):
     seed_everything(1234, workers=True)
-
-    config = Config("configs/config.yaml")
-    config["model"]["architecture"] = arch
     project_name = config["logger"]["project"]
 
-    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch))
+    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]))
+    
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
     
     test_dataloader = datamodule.test_dataloader()
@@ -53,11 +50,51 @@ def train(arch: str):
         ],
     )
     trainer.fit(model, datamodule=datamodule)
-    trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
+    #trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
 
 if __name__ == "__main__":
+    config = Config("configs/config.yaml")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str)
+    parser.add_argument("--lr", type=float, default=config["training"]["lr"])
+    parser.add_argument("--optimizer", type=str, default=config["training"]["optimizer"]["name"])
+    parser.add_argument("--ema", type=int, default=False)
+    parser.add_argument("--swa", type=int, default=False)
+    parser.add_argument("--as_regression", type=int, default=config["training"]["as_regression"])
+    parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
+    parser.add_argument("--mixup",type=int, default=True)
+    parser.add_argument("--mixup_alpha", type=float, default=config["training"]["mixup"]["mixup_alpha"])
+    parser.add_argument("--cutmix_alpha", type=float, default=config["training"]["mixup"]["cutmix_alpha"])
+
     args = parser.parse_args()
-    architecture = args.model
-    train(architecture)
+    lr = args.lr
+    optimizer = args.optimizer
+    ema = args.ema
+    swa = args.swa
+    as_regression = args.as_regression
+    print(as_regression)
+    data_augmentation_type = args.data_augmentation_type
+    mixup = args.mixup
+    print(mixup)
+    mixup_alpha = args.mixup_alpha
+    cutmix_alpha = args.cutmix_alpha
+
+    if as_regression and mixup:
+        # Regression and mixup are not compatible
+        raise ValueError("Regression and mixup are not compatible")
+    
+    if not ema:
+        del config["training"]["ema"]
+    if not swa:
+        del config["training"]["swa"]
+    if not mixup:
+        del config["training"]["mixup"]
+    else:
+        config["training"]["mixup"]["mixup_alpha"] = mixup_alpha
+        config["training"]["mixup"]["cutmix_alpha"] = cutmix_alpha
+
+    config["training"]["lr"] = lr
+    config["training"]["optimizer"]["name"] = optimizer
+    config["training"]["as_regression"] = as_regression
+    config["data"]["data_augmentation_type"] = data_augmentation_type 
+
+    train(config)

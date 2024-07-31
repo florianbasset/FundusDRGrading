@@ -1,0 +1,41 @@
+program: src/fundusClassif/scripts/train.py
+name: sweep_projet_DRGrading
+method: bayes
+metric:
+  goal: maximize
+  name: Validation Quadratic Kappa
+parameters:
+  lr:
+    min: 0.00001
+    max: 0.1
+  optimizer:
+    values: ["AdamP", "AdamW"]
+  ema : 
+    values: [0, 1]
+  swa :
+    values: [0, 1]
+  as_regression :
+    values: [0, 1]
+  data_augmentation_type:
+    values: ["heavy", "heavyarticle"]
+  mixup: 
+    values: [0, 1]
+  mixup_alpha: 
+      min: 0.0
+      max: 1.0
+  cutmix_alpha: 
+      min: 0.0
+      max: 1.0
+early_terminate:
+  type: hyperband
+  s: 2
+  eta: 3
+  max_iter: 27
+  #dropout:
+  #  min: 0.0
+  #  max: 0.5
+
+command:
+  - python
+  - ${program}
+  - ${args}
