@@ -1,5 +1,5 @@
 program: src/fundusClassif/scripts/train.py
-name: sweep_projet_DRGrading
+name: sweep_project_DRGrading
 method: bayes
 metric:
   goal: maximize
@@ -12,12 +12,20 @@ parameters:
     values: ["AdamP", "AdamW"]
   ema : 
     values: [0, 1]
+  #decay:
+  #  min: 0.9
+  #  max: 0.9999
   swa :
     values: [0, 1]
+  #swa_lrs:
+  #  min: 0.00001
+   # max: 0.01
   as_regression :
     values: [0, 1]
   data_augmentation_type:
-    values: ["heavy", "heavyarticle"]
+    values: ["light", "medium", "heavy", "heavyarticle"]
+  preprocessing:
+    values: ["autobalance", "clahe_lab", "clahe_rgb", "seoud", "sarki", "graham_meth1", "graham_meth2", "clahe_max_green_gsc"]
   mixup: 
     values: [0, 1]
   mixup_alpha: 
@@ -30,7 +38,7 @@ early_terminate:
   type: hyperband
   s: 2
   eta: 3
-  max_iter: 27
+  max_iter: 81
   #dropout:
   #  min: 0.0
   #  max: 0.5

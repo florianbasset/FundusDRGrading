@@ -11,31 +11,37 @@ from fundusClassif.callbacks.result_saver import ResultSaver
 from fundusClassif.data.data_factory import get_datamodule_from_config
 from fundusClassif.my_lightning_module import TrainerModule
 from fundusClassif.utils.logger import get_wandb_logger
+from fundusClassif.utils.images import get_preprocessing
 
 torch.set_float32_matmul_precision("medium")
 
 def train(config: Config):
     seed_everything(1234, workers=True)
     project_name = config["logger"]["project"]
+    config["data"]["cache_dir"] = config["data"]["preprocessing"]
 
-    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]))
-    
-    datamodule = get_datamodule_from_config(config["datasets"], config["data"])
-    
-    test_dataloader = datamodule.test_dataloader()
-    test_datasets_ids = [d.dataset.id for i, d in enumerate(test_dataloader)]
-    model = TrainerModule(config["model"], config["training"], test_datasets_ids)
+    if not config["trainer"]["fast_dev_run"]:
+        wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]))
 
-    training_callbacks = get_callbacks(config['training'])
-    
-    checkpoint_callback = ModelCheckpoint(
+        checkpoint_callback = ModelCheckpoint(
         monitor="Validation Quadratic Kappa",
         mode="max",
         save_last=True,
         auto_insert_metric_name=True,
         save_top_k=1,
         dirpath=os.path.join("checkpoints", project_name, os.environ["WANDB_RUN_NAME"]),
-    )
+        )
+
+    prepro_function = get_preprocessing(config["data"]["preprocessing"])
+    
+    datamodule = get_datamodule_from_config(config["datasets"], config["data"])
+    datamodule.post_resize_pre_cache.append(prepro_function)
+    datamodule.setup_all()
+    test_dataloader = datamodule.test_dataloader()
+    test_datasets_ids = [d.dataset.id for i, d in enumerate(test_dataloader)]
+    model = TrainerModule(config["model"], config["training"], test_datasets_ids)
+
+    training_callbacks = get_callbacks(config['training'])
 
     trainer = Trainer(
         **config["trainer"],
@@ -64,6 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("--mixup",type=int, default=True)
     parser.add_argument("--mixup_alpha", type=float, default=config["training"]["mixup"]["mixup_alpha"])
     parser.add_argument("--cutmix_alpha", type=float, default=config["training"]["mixup"]["cutmix_alpha"])
+    #parser.add_argument("--decay", type=float, default=config["training"]["ema"]["decay"])
+    #parser.add_argument("--swa_lrs", type=float, default=config["training"]["swa"]["swa_lrs"])
+    parser.add_argument("--preprocessing", type=str, default=config["data"]["preprocessing"])
 
     args = parser.parse_args()
     lr = args.lr
@@ -77,6 +86,10 @@ if __name__ == "__main__":
     print(mixup)
     mixup_alpha = args.mixup_alpha
     cutmix_alpha = args.cutmix_alpha
+    #decay = args.decay
+    #swa_lrs = args.swa_lrs
+    preprocessing = args.preprocessing
+    print(preprocessing)
 
     if as_regression and mixup:
         # Regression and mixup are not compatible
@@ -84,8 +97,14 @@ if __name__ == "__main__":
     
     if not ema:
         del config["training"]["ema"]
+    #else: 
+        #config["training"]["ema"]["decay"] = decay
+
     if not swa:
         del config["training"]["swa"]
+    #else:
+        #config["training"]["swa"]["swa_lrs"] = swa_lrs
+
     if not mixup:
         del config["training"]["mixup"]
     else:
@@ -96,5 +115,5 @@ if __name__ == "__main__":
     config["training"]["optimizer"]["name"] = optimizer
     config["training"]["as_regression"] = as_regression
     config["data"]["data_augmentation_type"] = data_augmentation_type 
-
+    config["data"]["preprocessing"] = preprocessing
     train(config)

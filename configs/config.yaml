@@ -18,6 +18,7 @@ data:
   use_cache: True
   cache_option: disk  #disk or memory
   data_augmentation_type: heavy #heavy  or heavyarticle
+  preprocessing: autobalance
 
 model:
   architecture: mobilenetv2_120d.ra_in1k
@@ -54,5 +55,5 @@ trainer:
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2
-  fast_dev_run: False #false
+  fast_dev_run: True #false
   
