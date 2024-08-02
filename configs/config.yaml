@@ -18,7 +18,9 @@ data:
   use_cache: True
   cache_option: disk  #disk or memory
   data_augmentation_type: heavy #heavy  or heavyarticle
-  preprocessing: autobalance
+
+data_preprocessing:
+  name: autobalance
 
 model:
   architecture: mobilenetv2_120d.ra_in1k

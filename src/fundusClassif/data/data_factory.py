@@ -71,7 +71,6 @@ def get_datamodule(datasets: List[str], dataset_args):
                     ).setup_all()
                 )
 
-        
     return merge_existing_datamodules(all_datamodules)
 
 

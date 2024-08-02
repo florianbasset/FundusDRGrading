@@ -11,9 +11,6 @@ from fundus_prepro.algo.sarki import sarki
 from fundus_prepro.algo.seoud import seoud
 from nntools.dataset import nntools_wrapper
 
-
-
-
 def spatial_batch_normalization(batch: torch.Tensor):
     dims = batch.ndim - 1
     min_value = torch.amin(batch, (dims - 1, dims), keepdim=True)

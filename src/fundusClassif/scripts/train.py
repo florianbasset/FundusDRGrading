@@ -12,14 +12,14 @@ from fundusClassif.data.data_factory import get_datamodule_from_config
 from fundusClassif.my_lightning_module import TrainerModule
 from fundusClassif.utils.logger import get_wandb_logger
 from fundusClassif.utils.images import get_preprocessing
+from fundus_data_toolkit.datamodules import DataHookPosition
 
 torch.set_float32_matmul_precision("medium")
 
 def train(config: Config):
     seed_everything(1234, workers=True)
     project_name = config["logger"]["project"]
-    config["data"]["cache_dir"] = config["data"]["preprocessing"]
-
+    
     if not config["trainer"]["fast_dev_run"]:
         wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]))
 
@@ -31,12 +31,20 @@ def train(config: Config):
         save_top_k=1,
         dirpath=os.path.join("checkpoints", project_name, os.environ["WANDB_RUN_NAME"]),
         )
-
-    prepro_function = get_preprocessing(config["data"]["preprocessing"])
+    else:
+        wandb_logger = None
+        checkpoint_callback = None
     
+
+    if config["data_preprocessing"]["name"] != "absent":
+        config["data"]["cache_dir"] = config["data_preprocessing"]["name"]
+        prepro_function = get_preprocessing(config["data_preprocessing"]["name"])
+
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
-    datamodule.post_resize_pre_cache.append(prepro_function)
-    datamodule.setup_all()
+
+    if config["data_preprocessing"]["name"] != "absent":
+        datamodule.set_data_pipeline_hook(prepro_function, position=DataHookPosition.POST_RESIZE_PRE_CACHE)
+
     test_dataloader = datamodule.test_dataloader()
     test_datasets_ids = [d.dataset.id for i, d in enumerate(test_dataloader)]
     model = TrainerModule(config["model"], config["training"], test_datasets_ids)
@@ -50,12 +58,13 @@ def train(config: Config):
             *training_callbacks,
             ResultSaver(os.path.join("results", project_name)),
             #RichProgressBar(),
-            checkpoint_callback,
+            
             EarlyStopping(monitor="Validation Quadratic Kappa", patience=25, mode="max"),
             LearningRateMonitor(),
-        ],
+        ] + ([checkpoint_callback] if checkpoint_callback is not None else []),
     )
-    trainer.fit(model, datamodule=datamodule)
+
+    #trainer.fit(model, datamodule=datamodule)
     #trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
 
 if __name__ == "__main__":
@@ -72,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--cutmix_alpha", type=float, default=config["training"]["mixup"]["cutmix_alpha"])
     #parser.add_argument("--decay", type=float, default=config["training"]["ema"]["decay"])
     #parser.add_argument("--swa_lrs", type=float, default=config["training"]["swa"]["swa_lrs"])
-    parser.add_argument("--preprocessing", type=str, default=config["data"]["preprocessing"])
+    parser.add_argument("--preprocessing", type=str, default=config["data_preprocessing"]["name"])
 
     args = parser.parse_args()
     lr = args.lr
@@ -80,17 +89,14 @@ if __name__ == "__main__":
     ema = args.ema
     swa = args.swa
     as_regression = args.as_regression
-    print(as_regression)
     data_augmentation_type = args.data_augmentation_type
     mixup = args.mixup
-    print(mixup)
     mixup_alpha = args.mixup_alpha
     cutmix_alpha = args.cutmix_alpha
     #decay = args.decay
     #swa_lrs = args.swa_lrs
     preprocessing = args.preprocessing
-    print(preprocessing)
-
+    
     if as_regression and mixup:
         # Regression and mixup are not compatible
         raise ValueError("Regression and mixup are not compatible")
@@ -115,5 +121,9 @@ if __name__ == "__main__":
     config["training"]["optimizer"]["name"] = optimizer
     config["training"]["as_regression"] = as_regression
     config["data"]["data_augmentation_type"] = data_augmentation_type 
-    config["data"]["preprocessing"] = preprocessing
+    config["data_preprocessing"]["name"] = preprocessing
+
+    if config["data_preprocessing"]["name"] == "absent":
+        del config["data_preprocessing"]["name"]
+    
     train(config)

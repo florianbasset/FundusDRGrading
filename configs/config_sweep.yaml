@@ -23,9 +23,9 @@ parameters:
   as_regression :
     values: [0, 1]
   data_augmentation_type:
-    values: ["light", "medium", "heavy", "heavyarticle"]
+    values: ["light", "medium", "heavy", "superheavy"]
   preprocessing:
-    values: ["autobalance", "clahe_lab", "clahe_rgb", "seoud", "sarki", "graham_meth1", "graham_meth2", "clahe_max_green_gsc"]
+    values: ["absent", "autobalance", "clahe_lab", "clahe_rgb", "seoud", "sarki", "graham_meth1", "graham_meth2", "clahe_max_green_gsc"]
   mixup: 
     values: [0, 1]
   mixup_alpha: 
