@@ -34,7 +34,6 @@ def train(config: Config):
     else:
         wandb_logger = None
         checkpoint_callback = None
-    
 
     if config["data_preprocessing"]["name"] != "absent":
         config["data"]["cache_dir"] = config["data_preprocessing"]["name"]
@@ -64,7 +63,7 @@ def train(config: Config):
         ] + ([checkpoint_callback] if checkpoint_callback is not None else []),
     )
 
-    #trainer.fit(model, datamodule=datamodule)
+    trainer.fit(model, datamodule=datamodule)
     #trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
 
 if __name__ == "__main__":
@@ -76,13 +75,15 @@ if __name__ == "__main__":
     parser.add_argument("--swa", type=int, default=False)
     parser.add_argument("--as_regression", type=int, default=config["training"]["as_regression"])
     parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
-    parser.add_argument("--mixup",type=int, default=True)
+    parser.add_argument("--mixup",type=int, default=False)
     parser.add_argument("--mixup_alpha", type=float, default=config["training"]["mixup"]["mixup_alpha"])
     parser.add_argument("--cutmix_alpha", type=float, default=config["training"]["mixup"]["cutmix_alpha"])
     #parser.add_argument("--decay", type=float, default=config["training"]["ema"]["decay"])
     #parser.add_argument("--swa_lrs", type=float, default=config["training"]["swa"]["swa_lrs"])
     parser.add_argument("--preprocessing", type=str, default=config["data_preprocessing"]["name"])
 
+    #print(config)
+    
     args = parser.parse_args()
     lr = args.lr
     optimizer = args.optimizer
@@ -91,11 +92,17 @@ if __name__ == "__main__":
     as_regression = args.as_regression
     data_augmentation_type = args.data_augmentation_type
     mixup = args.mixup
-    mixup_alpha = args.mixup_alpha
-    cutmix_alpha = args.cutmix_alpha
     #decay = args.decay
     #swa_lrs = args.swa_lrs
     preprocessing = args.preprocessing
+
+    if mixup:
+        mixup_alpha = args.mixup_alpha
+        cutmix_alpha = args.cutmix_alpha
+        config["training"]["mixup"]["mixup_alpha"] = mixup_alpha
+        config["training"]["mixup"]["cutmix_alpha"] = cutmix_alpha
+    else:
+        del config["training"]["mixup"]       
     
     if as_regression and mixup:
         # Regression and mixup are not compatible
@@ -111,19 +118,13 @@ if __name__ == "__main__":
     #else:
         #config["training"]["swa"]["swa_lrs"] = swa_lrs
 
-    if not mixup:
-        del config["training"]["mixup"]
-    else:
-        config["training"]["mixup"]["mixup_alpha"] = mixup_alpha
-        config["training"]["mixup"]["cutmix_alpha"] = cutmix_alpha
-
     config["training"]["lr"] = lr
     config["training"]["optimizer"]["name"] = optimizer
     config["training"]["as_regression"] = as_regression
     config["data"]["data_augmentation_type"] = data_augmentation_type 
     config["data_preprocessing"]["name"] = preprocessing
+    #print(config["data_preprocessing"]["name"])
 
-    if config["data_preprocessing"]["name"] == "absent":
-        del config["data_preprocessing"]["name"]
-    
+    #print(config)
+
     train(config)

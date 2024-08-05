@@ -12,12 +12,13 @@ datasets:
 
 data:
   img_size: *img_shape
-  batch_size: 32 #64
+  batch_size: 48 #64
   valid_size: 0.2 
   num_workers: 8
   use_cache: True
   cache_option: disk  #disk or memory
   data_augmentation_type: heavy #heavy  or heavyarticle
+  drop_last: True
 
 data_preprocessing:
   name: autobalance
@@ -53,9 +54,9 @@ trainer:
   accelerator: gpu #gpu
   deterministic: False #false
   devices: [0] 
-  max_epochs: 1000 #200
+  max_epochs: 50 #200
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2
-  fast_dev_run: True #false
+  fast_dev_run: False #false
   
