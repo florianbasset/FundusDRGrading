@@ -22,16 +22,16 @@ def train(arch: str):
     config["model"]["architecture"] = arch
     project_name = config["logger"]["project"]
 
-    
-    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', arch))
+    wandb_logger = get_wandb_logger(project_name, config.tracked_params, ("model/architecture", arch))
+    config["data"]["cache_dir"] = "Seoud"
     datamodule = get_datamodule_from_config(config["datasets"], config["data"])
-    
+
     test_dataloader = datamodule.test_dataloader()
     test_datasets_ids = [d.dataset.id for i, d in enumerate(test_dataloader)]
     model = TrainerModule(config["model"], config["training"], test_datasets_ids)
 
-    training_callbacks = get_callbacks(config['training'])
-    
+    training_callbacks = get_callbacks(config["training"])
+
     checkpoint_callback = ModelCheckpoint(
         monitor="Validation Quadratic Kappa",
         mode="max",
@@ -55,6 +55,7 @@ def train(arch: str):
     )
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

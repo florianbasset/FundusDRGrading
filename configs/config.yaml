@@ -1,14 +1,13 @@
-
 define: &img_shape [512, 512]
 
 logger:
   project: Grading-DiabeticRetinopathy-Comparisons-V3
 
 datasets:
-  eyepacs: /home/tmp/clpla/data/classification/eyepacs/
-  aptos: /home/tmp/clpla/data/classification/aptos/
-  idrid: /home/tmp/clpla/data/classification/IDRID/B. Disease Grading/ 
-  ddr: /home/tmp/clpla/data/classification/DDR-dataset/DR_grading/
+  eyepacs: /home/clement/Documents/data/eyepacs/
+  aptos: /home/clement/Documents/data/aptos/
+  idrid: /home/clement/Documents/data/IDRID/B. Disease Grading/
+  ddr: /home/clement/Documents/data/DDR-dataset/DR_grading/
 
 data:
   img_size: *img_shape
@@ -16,7 +15,7 @@ data:
   valid_size: 0.2
   num_workers: 12
   use_cache: True
-  cache_option: disk  # or memory
+  cache_option: disk # or memory
 
 model:
   architecture: mobilenet_v3large

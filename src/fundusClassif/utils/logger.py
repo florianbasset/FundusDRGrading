@@ -7,9 +7,7 @@ import wandb
 
 
 def get_wandb_logger(
-    project_name,
-    tracked_params,
-    item_check_if_run_exists: Optional[tuple[str, str]] = None,
+    project_name, tracked_params, item_check_if_run_exists: Optional[tuple[str, str]] = None, name=None
 ):
     name_item, value_item = item_check_if_run_exists
     if item_check_if_run_exists:
@@ -24,7 +22,7 @@ def get_wandb_logger(
             except ValueError:
                 print("Project not existing, starting run")
 
-    wandb_logger = WandbLogger(project=project_name, config=tracked_params)
+    wandb_logger = WandbLogger(project=project_name, config=tracked_params, name=name)
 
     if os.environ.get("LOCAL_RANK", None) is None:
         os.environ["WANDB_RUN_NAME"] = wandb_logger.experiment.name

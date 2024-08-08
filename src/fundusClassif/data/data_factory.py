@@ -41,35 +41,52 @@ def get_datamodule(datasets: List[str], dataset_args):
             case FundusDataset.IDRID:
                 all_datamodules.append(
                     IDRiDDataModule(
-                        CLASSIF_PATHS.IDRID, precise_autocrop=True, 
+                        CLASSIF_PATHS.IDRID,
+                        precise_autocrop=True,
                         data_augmentation_type=DAType.HEAVY,
-                        flag=cv2.IMREAD_COLOR, **dataset_args
+                        flag=cv2.IMREAD_COLOR,
+                        **dataset_args,
                     ).setup_all()
                 )
             case FundusDataset.EYEPACS:
                 all_datamodules.append(
                     EyePACSDataModule(
-                        CLASSIF_PATHS.EYEPACS, precise_autocrop=True, flag=cv2.IMREAD_COLOR, 
+                        CLASSIF_PATHS.EYEPACS,
+                        precise_autocrop=True,
+                        flag=cv2.IMREAD_COLOR,
                         data_augmentation_type=DAType.HEAVY,
-                        **dataset_args
+                        **dataset_args,
                     ).setup_all()
                 )
             case FundusDataset.APTOS:
                 all_datamodules.append(
                     AptosDataModule(
-                        CLASSIF_PATHS.APTOS, precise_autocrop=True, flag=cv2.IMREAD_COLOR, 
+                        CLASSIF_PATHS.APTOS,
+                        precise_autocrop=True,
+                        flag=cv2.IMREAD_COLOR,
                         data_augmentation_type=DAType.HEAVY,
-                        **dataset_args
+                        **dataset_args,
                     ).setup_all()
                 )
             case FundusDataset.DDR:
                 all_datamodules.append(
                     DDRDataModule(
-                        CLASSIF_PATHS.DDR, precise_autocrop=True, flag=cv2.IMREAD_COLOR, 
+                        CLASSIF_PATHS.DDR,
+                        precise_autocrop=True,
+                        flag=cv2.IMREAD_COLOR,
                         data_augmentation_type=DAType.HEAVY,
-                        **dataset_args
+                        **dataset_args,
                     ).setup_all()
                 )
+    for d in all_datamodules:
+        print(d)
+        if d.train is not None:
+            print("Train", len(d.train), end=" ")
+        if d.val is not None:
+            print("Val", len(d.val), end=" ")
+        if d.test is not None:
+            print("Test", len(d.test))
+
     return merge_existing_datamodules(all_datamodules)
 
 
