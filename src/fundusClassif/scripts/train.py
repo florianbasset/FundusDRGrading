@@ -21,7 +21,7 @@ def train(config: Config):
     project_name = config["logger"]["project"]
     
     if not config["trainer"]["fast_dev_run"]:
-        wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]))
+        wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]), id="5q5uiz45")
 
         checkpoint_callback = ModelCheckpoint(
         monitor="Validation Quadratic Kappa",
@@ -55,7 +55,7 @@ def train(config: Config):
         logger=wandb_logger,
         callbacks=[
             *training_callbacks,
-            ResultSaver(os.path.join("results", project_name)),
+            #ResultSaver(os.path.join("results", project_name)),
             #RichProgressBar(),
             
             EarlyStopping(monitor="Validation Quadratic Kappa", patience=25, mode="max"),
@@ -63,8 +63,8 @@ def train(config: Config):
         ] + ([checkpoint_callback] if checkpoint_callback is not None else []),
     )
 
-    trainer.fit(model, datamodule=datamodule)
-    #trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
+    #trainer.fit(model, datamodule=datamodule)
+    trainer.test(model, dataloaders=test_dataloader, ckpt_path="checkpoints/Grading-DiabeticRetinopathy-Comparisons-V3/polished-glade-174/epoch=64-step=61555.ckpt", verbose=True)
 
 if __name__ == "__main__":
     config = Config("configs/config.yaml")

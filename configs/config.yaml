@@ -21,7 +21,7 @@ data:
   drop_last: True
 
 data_preprocessing:
-  name: autobalance
+  name: graham_meth2
 
 model:
   architecture: mobilenetv2_120d.ra_in1k
@@ -33,7 +33,7 @@ training:
   lr: 0.00003
   as_regression: False #true
   optimizer:
-    name: AdamP #or AdamW
+    name: AdamW #or AdamW
     betas: [.9, .999] # [.9, .999]
     weight_decay: 0.0005
   mixup: 
@@ -54,7 +54,7 @@ trainer:
   accelerator: gpu #gpu
   deterministic: False #false
   devices: [0] 
-  max_epochs: 50 #200
+  max_epochs: 100 #200
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2
