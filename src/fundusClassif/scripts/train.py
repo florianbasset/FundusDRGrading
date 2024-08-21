@@ -21,7 +21,7 @@ def train(config: Config):
     project_name = config["logger"]["project"]
     
     if not config["trainer"]["fast_dev_run"]:
-        wandb_logger = get_wandb_logger(project_name, config.tracked_params, ('model/architecture', config["model"]["architecture"]), id="5q5uiz45")
+        wandb_logger = get_wandb_logger(project_name, config.tracked_params)
 
         checkpoint_callback = ModelCheckpoint(
         monitor="Validation Quadratic Kappa",
@@ -58,72 +58,36 @@ def train(config: Config):
             #ResultSaver(os.path.join("results", project_name)),
             #RichProgressBar(),
             
-            EarlyStopping(monitor="Validation Quadratic Kappa", patience=25, mode="max"),
+            EarlyStopping(monitor="Validation Quadratic Kappa", patience=10, mode="max"),
             LearningRateMonitor(),
         ] + ([checkpoint_callback] if checkpoint_callback is not None else []),
     )
 
-    #trainer.fit(model, datamodule=datamodule)
-    trainer.test(model, dataloaders=test_dataloader, ckpt_path="checkpoints/Grading-DiabeticRetinopathy-Comparisons-V3/polished-glade-174/epoch=64-step=61555.ckpt", verbose=True)
+    trainer.fit(model, datamodule=datamodule)
+    trainer.test(model, dataloaders=test_dataloader, ckpt_path="best", verbose=True)
 
 if __name__ == "__main__":
     config = Config("configs/config.yaml")
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr", type=float, default=config["training"]["lr"])
-    parser.add_argument("--optimizer", type=str, default=config["training"]["optimizer"]["name"])
-    parser.add_argument("--ema", type=int, default=False)
-    parser.add_argument("--swa", type=int, default=False)
-    parser.add_argument("--as_regression", type=int, default=config["training"]["as_regression"])
     parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
-    parser.add_argument("--mixup",type=int, default=False)
-    parser.add_argument("--mixup_alpha", type=float, default=config["training"]["mixup"]["mixup_alpha"])
-    parser.add_argument("--cutmix_alpha", type=float, default=config["training"]["mixup"]["cutmix_alpha"])
-    #parser.add_argument("--decay", type=float, default=config["training"]["ema"]["decay"])
-    #parser.add_argument("--swa_lrs", type=float, default=config["training"]["swa"]["swa_lrs"])
     parser.add_argument("--preprocessing", type=str, default=config["data_preprocessing"]["name"])
 
     #print(config)
     
     args = parser.parse_args()
     lr = args.lr
-    optimizer = args.optimizer
-    ema = args.ema
-    swa = args.swa
-    as_regression = args.as_regression
-    data_augmentation_type = args.data_augmentation_type
-    mixup = args.mixup
-    #decay = args.decay
-    #swa_lrs = args.swa_lrs
-    preprocessing = args.preprocessing
 
-    if mixup:
-        mixup_alpha = args.mixup_alpha
-        cutmix_alpha = args.cutmix_alpha
-        config["training"]["mixup"]["mixup_alpha"] = mixup_alpha
-        config["training"]["mixup"]["cutmix_alpha"] = cutmix_alpha
-    else:
-        del config["training"]["mixup"]       
+    if args.data_augmentation_type == "None":
+        data_augmentation_type = None
+    else:   
+        data_augmentation_type = args.data_augmentation_type
+
+    preprocessing = args.preprocessing     
     
-    if as_regression and mixup:
-        # Regression and mixup are not compatible
-        raise ValueError("Regression and mixup are not compatible")
-    
-    if not ema:
-        del config["training"]["ema"]
-    #else: 
-        #config["training"]["ema"]["decay"] = decay
-
-    if not swa:
-        del config["training"]["swa"]
-    #else:
-        #config["training"]["swa"]["swa_lrs"] = swa_lrs
-
     config["training"]["lr"] = lr
-    config["training"]["optimizer"]["name"] = optimizer
-    config["training"]["as_regression"] = as_regression
     config["data"]["data_augmentation_type"] = data_augmentation_type 
     config["data_preprocessing"]["name"] = preprocessing
-    #print(config["data_preprocessing"]["name"])
 
     #print(config)
 

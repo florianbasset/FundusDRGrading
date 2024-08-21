@@ -1,47 +1,16 @@
 program: src/fundusClassif/scripts/train.py
-name: sweep_project_DRGrading
-method: bayes
+name: sweep_project_DRGrading_v1
+method: grid
 metric:
   goal: maximize
   name: Validation Quadratic Kappa
 parameters:
   lr:
-    min: 0.00001
-    max: 0.00005
-  optimizer:
-    values: ["AdamP", "AdamW"]
-  ema : 
-    values: [0, 1]
-  #decay:
-  #  min: 0.9
-  #  max: 0.9999
-  swa :
-    values: [0, 1]
-  #swa_lrs:
-  #  min: 0.00001
-   # max: 0.01
-  as_regression :
-    values: [0, 1]
+    values : [0.00001, 0.00005, 0.0001, 0.0005, 0.001]
   data_augmentation_type:
-    values: ["light", "medium", "heavy", "superheavy"]
+    values: ["light", "None"]
   preprocessing:
-    values: ["absent", "autobalance", "clahe_lab", "clahe_rgb", "seoud", "sarki", "graham_meth1", "graham_meth2", "clahe_max_green_gsc"]
-  mixup: 
-    values: [0, 1]
-  mixup_alpha: 
-    min: 0.0
-    max: 1.0
-  cutmix_alpha: 
-    min: 0.0
-    max: 1.0
-early_terminate:
-  type: hyperband
-  s: 2
-  eta: 3
-  max_iter: 81
-  #dropout:
-  #  min: 0.0
-  #  max: 0.5
+    values: ["absent", "autobalance", "clahe_lab", "clahe_rgb","clahe_max_green_gsc","seoud", "sarki"] # "graham_meth1", "graham_meth2"
 
 command:
   - python

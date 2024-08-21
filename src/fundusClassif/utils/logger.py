@@ -12,8 +12,9 @@ def get_wandb_logger(
     item_check_if_run_exists: Optional[tuple[str, str]] = None,
     id=None,
 ):
-    name_item, value_item = item_check_if_run_exists
+    
     if item_check_if_run_exists:
+        name_item, value_item = item_check_if_run_exists
         if os.environ.get("LOCAL_RANK", None) is None:
             api = wandb.Api()
             try:

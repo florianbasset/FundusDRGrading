@@ -70,6 +70,14 @@ def get_datamodule(datasets: List[str], dataset_args):
                         **dataset_args
                     ).setup_all()
                 )
+    for d in all_datamodules:
+            print(d)
+            if d.train is not None:
+                print("Train", len(d.train), end=" ")
+            if d.val is not None:
+                print("Val", len(d.val), end=" ")
+            if d.test is not None:
+                print("Test", len(d.test))        
 
     return merge_existing_datamodules(all_datamodules)
 

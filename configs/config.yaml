@@ -12,7 +12,7 @@ datasets:
 
 data:
   img_size: *img_shape
-  batch_size: 48 #64
+  batch_size: 96 #64
   valid_size: 0.2 
   num_workers: 8
   use_cache: True
@@ -21,10 +21,10 @@ data:
   drop_last: True
 
 data_preprocessing:
-  name: graham_meth2
+  name: absent
 
 model:
-  architecture: mobilenetv2_120d.ra_in1k
+  architecture: mobilenetv4_conv_medium.e500_r256_in1k
   num_classes: 5 
   pretrained: True #True
   img_size: *img_shape 
@@ -36,25 +36,14 @@ training:
     name: AdamW #or AdamW
     betas: [.9, .999] # [.9, .999]
     weight_decay: 0.0005
-  mixup: 
-    mixup_alpha: 0.5
-    cutmix_alpha: 0.5
-    prob: 1.0
-    switch_prob: 0.5
-    mode: batch
-    label_smoothing: 0.1
-    num_classes: 5
-  swa:
-    swa_lrs: 0.00003  #0.00003
-  ema:
-    decay: 0.999 #0.999
+ 
 
 trainer:
   accumulate_grad_batches: 1 #4
   accelerator: gpu #gpu
   deterministic: False #false
   devices: [0] 
-  max_epochs: 100 #200
+  max_epochs: 50 #200
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2
