@@ -95,6 +95,9 @@ class TrainerModule(pl.LightningModule, PyTorchModelHubMixin):
         self.log_dict(self.metrics, on_epoch=True, on_step=False, sync_dist=True)
         self.log("val_loss", loss, on_epoch=True, on_step=False, sync_dist=True)
         return {"pred": pred, "gt": gt}
+    
+    def on_validation_end(self) -> None:
+        self.metrics.reset()
 
     def test_step(self, data, batch_index, dataloader_idx=0) -> STEP_OUTPUT:
         image = data["image"]
