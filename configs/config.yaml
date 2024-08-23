@@ -43,7 +43,7 @@ trainer:
   accelerator: gpu #gpu
   deterministic: False #false
   devices: [0] 
-  max_epochs: 50 #200
+  max_epochs: 45 #200
   precision: 16-mixed #16-mixed
   check_val_every_n_epoch: 1 #1
   num_sanity_val_steps: 2 #2

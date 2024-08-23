@@ -10,7 +10,7 @@ parameters:
   data_augmentation_type:
     values: ["light", "None"]
   preprocessing:
-    values: ["absent", "autobalance", "clahe_lab", "clahe_rgb","clahe_max_green_gsc","seoud", "sarki"] # "graham_meth1", "graham_meth2"
+    values: ["sarki", "absent", "autobalance", "clahe_lab", "clahe_rgb","clahe_max_green_gsc","seoud"]
 
 command:
   - python
