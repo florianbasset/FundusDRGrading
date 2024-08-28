@@ -2,7 +2,7 @@
 define: &img_shape [512, 512]
 
 logger:
-  project: Grading-DiabeticRetinopathy-Comparisons-V3
+  project: Grading-DiabeticRetinopathy-Comparisons-finalVersion
 
 datasets:
   eyepacs: /home/florian/Documents/donnees_medicales/eyepacs/
@@ -12,7 +12,7 @@ datasets:
 
 data:
   img_size: *img_shape
-  batch_size: 96 #64
+  batch_size: 48 #64
   valid_size: 0.2 
   num_workers: 8
   use_cache: True

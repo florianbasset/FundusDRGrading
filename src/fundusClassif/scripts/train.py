@@ -70,9 +70,9 @@ if __name__ == "__main__":
     config = Config("configs/config.yaml")
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr", type=float, default=config["training"]["lr"])
-    parser.add_argument("--model", type=int, default=config["model"]["architecture"])
     #parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
     parser.add_argument("--preprocessing", type=str, default=config["data_preprocessing"]["name"])
+    parser.add_argument("--model", type=str, default=config["model"]["architecture"])
 
     #print(config)
     
