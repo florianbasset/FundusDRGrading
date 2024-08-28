@@ -17,7 +17,7 @@ data:
   num_workers: 8
   use_cache: True
   cache_option: disk  #disk or memory
-  data_augmentation_type: heavy #heavy  or heavyarticle
+  data_augmentation_type: light #heavy  or heavyarticle
   drop_last: True
 
 data_preprocessing:

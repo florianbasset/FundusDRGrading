@@ -70,24 +70,27 @@ if __name__ == "__main__":
     config = Config("configs/config.yaml")
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr", type=float, default=config["training"]["lr"])
-    parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
+    parser.add_argument("--model", type=int, default=config["model"]["architecture"])
+    #parser.add_argument("--data_augmentation_type", type=str, default=config["data"]["data_augmentation_type"])
     parser.add_argument("--preprocessing", type=str, default=config["data_preprocessing"]["name"])
 
     #print(config)
     
     args = parser.parse_args()
     lr = args.lr
+    model = args.model
 
-    if args.data_augmentation_type == "None":
-        data_augmentation_type = None
-    else:   
-        data_augmentation_type = args.data_augmentation_type
+    #if args.data_augmentation_type == "None":
+    #    data_augmentation_type = None
+    #else:   
+    #    data_augmentation_type = args.data_augmentation_type
 
     preprocessing = args.preprocessing     
     
     config["training"]["lr"] = lr
-    config["data"]["data_augmentation_type"] = data_augmentation_type 
+    #config["data"]["data_augmentation_type"] = data_augmentation_type 
     config["data_preprocessing"]["name"] = preprocessing
+    config["model"]["architecture"] = model
 
     #print(config)
 
