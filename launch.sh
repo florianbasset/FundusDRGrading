@@ -1,7 +1,6 @@
 #!/bin/bash
 
-python src/fundusClassif/scripts/train.py --lr 0.00025 --preprocessing sarki --model efficientnet_b0.ra_in1k
-python src/fundusClassif/scripts/train.py --lr 0.000025 --preprocessing seoud --model efficientnet_b0.ra_in1k
+
 python src/fundusClassif/scripts/train.py --lr 0.00005 --preprocessing autobalance --model efficientnet_b0.ra_in1k
 python src/fundusClassif/scripts/train.py --lr 0.00005 --preprocessing clahe_max_green_gsc --model efficientnet_b0.ra_in1k
 python src/fundusClassif/scripts/train.py --lr 0.00025 --preprocessing clahe_rgb --model efficientnet_b0.ra_in1k
